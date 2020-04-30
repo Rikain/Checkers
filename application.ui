@@ -1,21 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <author/>
- <comment/>
- <exportmacro/>
  <class>Application</class>
  <widget class="QWidget" name="Application">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>805</width>
+    <height>660</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <widget class="QStackedWidget" name="stackedWidget">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>805</width>
+     <height>660</height>
+    </rect>
+   </property>
+   <widget class="QWidget" name="startWindow">
+    <widget class="QWidget" name="verticalLayoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>20</y>
+       <width>421</width>
+       <height>511</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item alignment="Qt::AlignHCenter">
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <pointsize>40</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Checkers</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="newGameButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>35</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton{
+	color: #2F4F4F;
+	background-color: #A9A9A9;
+	border: 1px solid gray;
+	padding: 5px;
+}
+
+QPushButton:hover{
+	color: #708090;
+	background-color: #C0C0C0;
+	border: 1px solid gray;
+	padding: 5px;
+}
+
+QPushButton:pressed{
+	color: #778899;
+	background-color: #DCDCDC;
+	border: 1px solid gray;
+	padding: 5px;
+}</string>
+        </property>
+        <property name="text">
+         <string>New game</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="quitButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>40</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton{
+	color: #2F4F4F;
+	background-color: #A9A9A9;
+	border: 1px solid gray;
+	padding: 5px;
+}
+
+QPushButton:hover{
+	color: #708090;
+	background-color: #C0C0C0;
+	border: 1px solid gray;
+	padding: 5px;
+}
+
+QPushButton:pressed{
+	color: #778899;
+	background-color: #DCDCDC;
+	border: 1px solid gray;
+	padding: 5px;
+}</string>
+        </property>
+        <property name="text">
+         <string>Quit</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="gameplayWindow" name="GameplayWindow"/>
+  </widget>
  </widget>
- <pixmapfunction/>
+ <customwidgets>
+  <customwidget>
+   <class>gameplayWindow</class>
+   <extends>QWidget</extends>
+   <header>gameplaywindow.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
  <connections/>
 </ui>
