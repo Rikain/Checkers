@@ -18,6 +18,7 @@ private:
     gameLogic::Moves move_vec;
     gameLogic game;
     size_t move_it = 0;
+    void new_first_click(QSquare* thisItem);
     void clear_inputs();
     void return_piece_stack();
     void highlight_moves(QSquare* thisItem);

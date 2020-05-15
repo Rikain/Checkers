@@ -71,3 +71,7 @@ Thumbs.db
 *.dll
 *.exe
 
+#My files
+"obselete code.txt"
+
+

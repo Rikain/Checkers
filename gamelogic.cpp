@@ -90,14 +90,13 @@ gameLogic::gameLogic(size_t board_side_in)
 
 void gameLogic::update_moves()
 {
-    gameLogic::Moves moves; //should propably change it into a tree not a vector really
-
+    gameLogic::Moves moves;
     std::vector<gameLogic::Coordinates>* men;
     std::vector<gameLogic::Coordinates>* kings;
 
     if(white_player){
         men = &whiteMen;
-        kings = & blackKings;
+        kings = &whiteKings;
     }else{
         men = &blackMen;
         kings = &blackKings;
@@ -105,14 +104,14 @@ void gameLogic::update_moves()
 
     //start with kings' moves as they are propably longer
     size_t longest_move = 0;
-
+    bool taken = false;
 
     for(gameLogic::Coordinates p : *kings){
-        moves_of_a_piece(p,longest_move,moves);
+        moves_of_a_piece(p,longest_move,moves,taken,true);
     }
 
     for(gameLogic::Coordinates p : *men){
-        moves_of_a_piece(p,longest_move,moves);
+        moves_of_a_piece(p,longest_move,moves,taken,false);
     }
 
     if(longest_move == 0){
@@ -134,7 +133,6 @@ void gameLogic::playerInput(const gameLogic::Move &player_move)
         Square::Piece piece = squares[square_pos(*it)]->update_piece(Square::Empty);
         remove_piece(*it,piece);
     }
-    squares[square_pos(player_move.first.back())]->update_piece(played_piece);
     add_piece(player_move.first.back(),played_piece);
     switch_player();
     update_moves();
@@ -146,11 +144,11 @@ gameLogic::GameState gameLogic::game_state() const
     return state;
 }
 
-gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &condition, bool& move_ended, bool &enemy_piece, size_t& longest_move, bool& white_player, bool taken, bool king, bool second_enemy)
+gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &boudires_condition,bool player_move_condition, bool& move_ended, bool enemy_piece, size_t& longest_move, bool white_player, bool &taken, bool king)
 {
 
     Coordinates next_square = next_square_func(current_suqare);
-    bool in_bounds = condition(next_square);
+    bool in_bounds = boudires_condition(next_square);
     if(!in_bounds){
         //left the board
         if(enemy_piece){
@@ -164,15 +162,20 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
         Square::Piece next_piece = squares[square_pos(next_square)]->show_piece();
         if(next_piece == Square::Empty || (std::find(current_move.second.begin(),current_move.second.end(),next_square) != current_move.second.end())){
             if(!enemy_piece){
-                current_move.first.push_back(next_square);
-                add_move(moves,current_move,longest_move,taken,enemy_piece);
-                move_ended = true;
-                current_move.first.pop_back();
-                return next_square;
+                if(current_move.second.size() == 1 && player_move_condition){
+                    current_move.first.push_back(next_square);
+                    add_move(moves,current_move,longest_move,taken,enemy_piece);
+                    move_ended = true;
+                    current_move.first.pop_back();
+                    return next_square;
+                }else{
+                    move_ended = true;
+                    return Coordinates();
+                }
             }else{
                 current_move.first.push_back(next_square);
+                current_move.second.emplace_back(current_suqare);
                 add_move(moves,current_move,longest_move,taken,enemy_piece);
-                current_move.second.emplace_back(current_suqare);;
                 enemy_piece = false;
                 return next_square;
             }
@@ -186,7 +189,7 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
                     return Coordinates();
                 }else{
                     enemy_piece = true;
-                    return go_in_direction(moves,current_move,next_square,next_square_func,condition,move_ended,enemy_piece,longest_move,white_player,taken,king,second_enemy); //(musisz pojsc jeszcze raz w ten sam direction gdy jest pierwszy raz enemy piece)
+                    return go_in_direction(moves,current_move,next_square,next_square_func,boudires_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king); //(musisz pojsc jeszcze raz w ten sam direction gdy jest pierwszy raz enemy piece)
                 }
             }
         }else{
@@ -196,7 +199,7 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
                     return Coordinates();
                 }else{
                     enemy_piece = true;
-                    return go_in_direction(moves,current_move,next_square,next_square_func,condition,move_ended,enemy_piece,longest_move,white_player,taken,king,second_enemy); //(musisz pojsc jeszcze raz w ten sam direction gdy jest pierwszy raz enemy piece)
+                    return go_in_direction(moves,current_move,next_square,next_square_func,boudires_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king); //(musisz pojsc jeszcze raz w ten sam direction gdy jest pierwszy raz enemy piece)
                 }
             }else{
                 move_ended = true;
@@ -206,10 +209,10 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
     }
 }
 
-void gameLogic::add_move(gameLogic::Moves &moves, gameLogic::Move &current_move, size_t &longest_move, bool taken, bool enemy_piece)
+void gameLogic::add_move(gameLogic::Moves &moves, gameLogic::Move &current_move, size_t &longest_move, bool &taken, bool enemy_piece)
 {
     if(current_move.first.size() == longest_move){
-        if(longest_move == 2){
+        if(longest_move <= 2){
             if(taken){
                 if(enemy_piece){
                      moves.push_back(current_move);
@@ -231,7 +234,7 @@ void gameLogic::add_move(gameLogic::Moves &moves, gameLogic::Move &current_move,
     return;
 }
 
-void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_move,gameLogic::Moves &moves)
+void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_move,gameLogic::Moves &moves, bool &taken,bool king)
 {
     static std::function<bool(gameLogic::Coordinates)> br_condition = [](Coordinates c){return (c.first < 10 && c.second < 10);};
     static std::function<bool(gameLogic::Coordinates)> bl_condition = [](Coordinates c){return (c.first >= 0 && c.second < 10);};
@@ -247,20 +250,19 @@ void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_m
     Coordinates current_suqare = piece;
     directions_to_check.push(std::array<bool,4>{true,true,true,true});
     Move current_move;
-    bool taken = false;
     current_move.first.push_back(piece);
     current_move.second.push_back(piece);
 
      //direction order is: BR,BL,TR,TL
-    //still neeed to add in go_in_direction to not include ate pieces as existing ones
 
     while(!directions_to_check.empty()){
         bool move_ended = false;
         bool enemy_piece = false;
-        bool second_enemy = false;
         if(directions_to_check.top()[0]){
 
-            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,br_square,br_condition,move_ended,enemy_piece,longest_move,white_player,taken,second_enemy,true);
+            bool player_move_condition = !white_player;
+
+            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,br_square,br_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king);
 
             directions_to_check.top()[0] = false;
 
@@ -270,7 +272,9 @@ void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_m
             }
         }else if(directions_to_check.top()[1]){
 
-            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,bl_square,bl_condition,move_ended,enemy_piece,longest_move,white_player,taken,second_enemy,true);
+            bool player_move_condition = !white_player;
+
+            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,bl_square,bl_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king);
 
             directions_to_check.top()[1] = false;
 
@@ -281,7 +285,9 @@ void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_m
 
         }else if(directions_to_check.top()[2]){
 
-            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,tr_square,tr_condition,move_ended,enemy_piece,longest_move,white_player,taken,second_enemy,true);
+            bool player_move_condition = white_player;
+
+            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,tr_square,tr_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king);
 
             directions_to_check.top()[2] = false;
 
@@ -292,7 +298,9 @@ void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_m
 
         }else if(directions_to_check.top()[3]){
 
-            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,tl_square,tl_condition,move_ended,enemy_piece,longest_move,white_player,taken,second_enemy,true);
+            bool player_move_condition = white_player;
+
+            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,tl_square,tl_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king);
 
             directions_to_check.top()[3] = false;
 
@@ -308,7 +316,6 @@ void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_m
             current_move.second.pop_back();
             if(current_move.first.size() == 1){
                 assert(current_move.second.size() == 1);
-                taken = false;
             }
         }
     }
@@ -349,6 +356,20 @@ void gameLogic::remove_piece(gameLogic::Coordinates cor, Square::Piece &piece)
 
 void gameLogic::add_piece(gameLogic::Coordinates cor, Square::Piece &piece)
 {
+   switch(piece){
+   case Square::White:
+       if(cor.second == 0){
+            piece = Square::WhiteKing;
+       }
+       break;
+   case Square::Black:
+       if(static_cast<size_t>(cor.second) == (board_side-1)){
+            piece = Square::BlackKing;
+       }
+   default:
+       break;
+   }
+    squares[square_pos(cor)]->update_piece(piece);
     switch(piece){
     case Square::White:
         whiteMen.push_back(cor);

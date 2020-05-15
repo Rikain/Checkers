@@ -34,14 +34,11 @@ public:
 private:
     GameState state = inProgress;
     bool white_player = true;
-    //bool go_in_direction(std::vector<Move> &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &condition, bool& move_ended, bool &enemy_piece, size_t& longest_move, bool& white_player, std::vector<gameLogic::Coordinates> &pieces_to_remove,bool king = false,bool secound_enemy = false);
-    //void move_end(std::vector<Move> &moves,Move &current_move,size_t& longest_move);
 
-    Coordinates go_in_direction(gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &condition, bool& move_ended, bool &enemy_piece, size_t& longest_move, bool& white_player, bool taken, bool king = false,bool second_enemy = false);
-    void add_move(gameLogic::Moves &moves,Move &current_move,size_t& longest_move, bool taken, bool enemy_piece);
-    void moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_move,gameLogic::Moves &moves);
+    Coordinates go_in_direction(gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &boudires_condition,bool player_move_condition, bool& move_ended, bool enemy_piece, size_t& longest_move, bool white_player, bool &taken, bool king = false);
+    void add_move(gameLogic::Moves &moves,Move &current_move,size_t& longest_move, bool &taken, bool enemy_piece);
+    void moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_move,gameLogic::Moves &moves, bool &taken,bool king = false);
     void reset_add_move(gameLogic::Moves &moves,Move &current_move,size_t& longest_move);
-
 
     Square **squares = nullptr;
     size_t squares_size = 100;

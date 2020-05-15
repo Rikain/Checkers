@@ -88,30 +88,28 @@ void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
         if(thisItem->show_piece() == Square::Empty){
             clear_inputs();
         }else{
-            lastItem = thisItem;
-            delete_highlights(thisItem);
-            //highlight squares of possible moves
-            highlight_moves(thisItem);
-            if(move_vec.size() == 0){
-                clear_inputs();
-            }
+            new_first_click(thisItem);
         }
     }
     else{
         if(move_vec.size() > 0){
-            if(thisItem->is_highlighted()){
+            if(thisItem->is_highlighted() && (thisItem->show_piece() == Square::Empty)){
                 ++move_it;
                 for(gameLogic::Moves::iterator move = move_vec.begin();move != move_vec.end();){
                     if(thisItem->correct_board_cor((*move).first[move_it])){
                         Square::Piece piece = lastItem->show_piece();
+                        if(move_it == 1){
+                            Square::Piece piece2 = squares[game.square_pos(move->second[0])]->update_piece(Square::Empty);
+                            pieces_stack.push_back(std::make_pair(move->second[0],piece2));
+                        }
                         if(move_it < move->second.size()){
                             Square::Piece piece2 = squares[game.square_pos(move->second[move_it])]->update_piece(Square::Empty);
                             pieces_stack.push_back(std::make_pair(move->second[move_it],piece2));
                         }
                         if(move_it >= (*move).first.size()-1){
+                            squares[game.square_pos(move->first[0])]->update_piece(piece);
                             return_piece_stack();
-                            game.playerInput((*move));
-                            move_it = 0;
+                            game.playerInput((*move));                           
                             clear_inputs();
                             break;
                         }else{
@@ -126,6 +124,8 @@ void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
                         move = move_vec.erase(move);
                     }
                 }
+            }else if(thisItem->show_piece() != Square::Empty){
+                new_first_click(thisItem);
             }else{
                 clear_inputs();
             }
@@ -137,18 +137,43 @@ void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
     QGraphicsScene::update();
 }
 
+void gameGraphicsScene::new_first_click(QSquare *thisItem)
+{
+    bool found = false;
+    for(auto move: game.possible_moves){
+        if(thisItem->correct_board_cor(move.first[0])){
+            found = true;
+            break;
+        }
+    }
+    if(found){
+        delete_highlights(thisItem);
+        highlight_moves(thisItem);
+        if(move_vec.size() == 0){
+            clear_inputs();
+        }
+        lastItem = thisItem;
+        thisItem->add_highlight();
+    }else{
+        clear_inputs();
+    }
+}
+
 void gameGraphicsScene::clear_inputs()
 {
-    this->selectedItems().clear();
-    lastItem = nullptr;
+    move_it = 0;
     return_piece_stack();
     delete_highlights();
     highlight_squares();
+    lastItem = nullptr;
     return;
 }
 
 void gameGraphicsScene::return_piece_stack()
 {
+    if(lastItem != nullptr && !pieces_stack.empty()){
+        lastItem->update_piece(Square::Empty);
+    }
     for(auto p: pieces_stack){
         squares[game.square_pos(p.first)]->update_piece(p.second);
     }
