@@ -16,17 +16,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    Square.cpp \
     application.cpp \
+    gamegraphicsscene.cpp \
+    gamelogic.cpp \
     gameplaywindow.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    qsquare.cpp \
+    square.cpp
 
 HEADERS += \
-    Square.h \
     application.h \
+    gamegraphicsscene.h \
+    gamelogic.h \
     gameplaywindow.h \
-    mainwindow.h
+    mainwindow.h \
+    qsquare.h \
+    square.h
 
 FORMS += \
     application.ui \

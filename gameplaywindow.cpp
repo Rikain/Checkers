@@ -1,5 +1,7 @@
 #include "gameplaywindow.h"
 #include "ui_gameplaywindow.h"
+#include <QDebug>
+#include "assert.h"
 
 gameplayWindow::gameplayWindow(QWidget *parent) :
     QWidget(parent),
@@ -10,88 +12,72 @@ gameplayWindow::gameplayWindow(QWidget *parent) :
 
 gameplayWindow::~gameplayWindow()
 {
+    delete_board();
     delete ui;
-    for(size_t i = 0;i < board_side*board_side;++i){
-        delete squares[i];
-    }
-    delete scene;
 }
 
 void gameplayWindow::start_a_new_game()
 {
-    make_new_board();
+    new_board();
 }
 
-void gameplayWindow::make_new_board()
+/*
+void gameplayWindow::HandleSelection()
 {
-    for(size_t i = 0;i < board_side*board_side;++i){
-        delete squares[i];
-    }
-    delete scene;
-
-    scene = new QGraphicsScene(this);
-
-    bool black = false;
-
-    int rows;
-    if(board_side == 8){
-        rows = 3;
-    }else if(board_side == 10){
-        rows = 4;
-    }
-
-    size_t i = 0;
-
-    size_t cap = board_side*rows;
-
-    for(;i < cap;++i){
-        if(black){
-            squares[i] = new Square((i%board_side),(i/board_side),Qt::black,Square::Black);
-            scene->addItem(squares[i]);
-            if(i%board_side != board_side-1){
-                black = false;
+    //i guess i have ot change it to a overridden QGrphicsScene with mousepressevent
+    if(start){
+        qDebug() << "siema";
+        Square* thisItem = dynamic_cast<Square*>(scene->selectedItems().back());
+        if(lastItem == nullptr){
+            if(scene->selectedItems().length() > 1){
+                qDebug() << "Error more than 1 sleected item at once! " + QString::number(scene->selectedItems().length());
             }
-        }else{
-            squares[i] = new Square((i%board_side),(i/board_side),Qt::white,Square::Empty);
-            scene->addItem(squares[i]);
-            if(i%board_side != board_side-1){
-                black = true;
+            else{
+                if(thisItem->show_piece() == Square::Empty){
+                    scene->selectedItems().clear();
+                    //clear selectedItems somehow;
+                }else{
+                    lastItem = thisItem;
+
+                    //make it so possible moves for this piece are highlited (if any else treat it as Empty Square)
+                }
+
             }
+        }else if(lastItem == thisItem){
+            //do nothing
+            qDebug() << "eluwina";
+        }
+        else{
+            if(scene->selectedItems().length() > 2){
+                qDebug() << "Error more than 2 sleected item at once! " + QString::number(scene->selectedItems().length());
+            }
+            Square::Piece piece = lastItem->update_piece(Square::Empty);
+            thisItem->update_piece(piece);
+            scene->selectedItems().clear();
+            qDebug() << scene->selectedItems().length();
+            lastItem = nullptr;
         }
     }
+}
+*/
 
-    cap += board_side*(board_side-2*rows);
-    for(;i < cap;++i){
-        if(black){
-            squares[i] = new Square((i%board_side),(i/board_side),Qt::black,Square::Empty);
-            scene->addItem(squares[i]);
-            if(i%board_side != board_side-1){
-                black = false;
-            }
-        }else{
-            squares[i] = new Square((i%board_side),(i/board_side),Qt::white,Square::Empty);
-            scene->addItem(squares[i]);
-            if(i%board_side != board_side-1){
-                black = true;
-            }
-        }
-    }
-    cap +=  board_side*rows;
+void gameplayWindow::new_board()
+{
+    delete_board();
 
-    for(;i < cap;++i){
-        if(black){
-            squares[i] = new Square((i%board_side),(i/board_side),Qt::black,Square::White);
-            scene->addItem(squares[i]);
-            if(i%board_side != board_side-1){
-                black = false;
-            }
-        }else{
-            squares[i] = new Square((i%board_side),(i/board_side),Qt::white,Square::Empty);
-            scene->addItem(squares[i]);
-            if(i%board_side != board_side-1){
-                black = true;
-            }
-        }
-    }
+    qDebug() << "s1";
+
+    scene = new gameGraphicsScene(this);
+
+    qDebug() << "s2";
+
     ui->graphicsView->setScene(scene);
+}
+
+void gameplayWindow::delete_board()
+{
+    if(scene != nullptr){
+        delete scene;
+        scene = nullptr;
+    }
 }
