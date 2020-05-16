@@ -22,7 +22,15 @@
      <height>605</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_2"/>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <widget class="QPushButton" name="button_rollback">
+      <property name="text">
+       <string>Rollback move</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QGraphicsView" name="graphicsView">
    <property name="geometry">

@@ -38,6 +38,7 @@ gameLogic::gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_
 gameLogic::gameLogic(QSquare **squares_ptr, size_t board_side_in)
 {
     squares = new Square*[board_side_in*board_side_in];
+    free_array = true;
 
     for(size_t i = 0;i < board_side_in*board_side_in;++i){
         squares[i] = squares_ptr[i];
@@ -126,11 +127,11 @@ void gameLogic::update_moves()
 
 void gameLogic::playerInput(const gameLogic::Move &player_move)
 {
-    Square::Piece played_piece = squares[square_pos(player_move.first.front())]->update_piece(Square::Empty);
+    Square::Piece played_piece = squares[square_pos(player_move.first[0])]->update_piece(Square::Empty);
     remove_piece(player_move.first.front(),played_piece);
     for(auto it = player_move.second.begin()+1;it != player_move.second.end();++it){
-        Square::Piece piece = squares[square_pos(*it)]->update_piece(Square::Empty);
-        remove_piece(*it,piece);
+        Square::Piece piece = squares[square_pos((*it).first)]->update_piece(Square::Empty);
+        remove_piece(((*it).first),piece);
     }
     add_piece(player_move.first.back(),played_piece);
     switch_player();
@@ -159,7 +160,7 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
         return Coordinates();
     }else{
         Square::Piece next_piece = squares[square_pos(next_square)]->show_piece();
-        if(next_piece == Square::Empty || (std::find(current_move.second.begin(),current_move.second.end(),next_square) != current_move.second.end())){
+        if(next_piece == Square::Empty || (std::find_if(current_move.second.begin(),current_move.second.end(),[next_square](std::pair<Coordinates,bool> pair){return next_square == pair.first;}) != current_move.second.end())){
             if(!enemy_piece){
                 if(current_move.second.size() == 1){
                     current_move.first.push_back(next_square);
@@ -173,7 +174,11 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
                 }
             }else{
                 current_move.first.push_back(next_square);
-                current_move.second.emplace_back(current_suqare);
+                if(squares[square_pos(current_suqare)]->show_piece() == Square::WhiteKing || squares[square_pos(current_suqare)]->show_piece() == Square::BlackKing){
+                    current_move.second.emplace_back(std::make_pair(current_suqare, true));
+                }else{
+                    current_move.second.emplace_back(std::make_pair(current_suqare, false));
+                }
                 add_move(moves,current_move,longest_move,taken,enemy_piece);
                 enemy_piece = false;
                 return next_square;
@@ -261,7 +266,7 @@ void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_m
     }
     Move current_move;
     current_move.first.push_back(piece);
-    current_move.second.push_back(piece);
+    current_move.second.push_back(std::make_pair(piece,king));
 
      //direction order is: BR,BL,TR,TL
 
@@ -354,6 +359,64 @@ void gameLogic::add_piece(gameLogic::Coordinates cor, Square::Piece &piece)
     }
 }
 
+void gameLogic::rollback_move(gameLogic::Move& move)
+{
+    Square::Piece played_piece = squares[square_pos(move.first.back())]->update_piece(Square::Empty);
+    remove_piece(move.first.back(),played_piece);
+    for(auto it = move.second.begin()+1;it != move.second.end();++it){
+        Square::Piece piece;
+        if((*it).second){
+            if(white_player){
+                piece = Square::WhiteKing;
+            }
+            else{
+                piece = Square::BlackKing;
+            }
+        }else{
+            if(white_player){
+                piece = Square::White;
+            }
+            else{
+                piece = Square::Black;
+            }
+        }
+        add_piece((*it).first,piece);
+    }
+    add_piece(move.second.front().first,played_piece);
+    switch_player();
+    update_moves();
+    return;
+}
+
+void gameLogic::rollback_move_no_update(gameLogic::Move &move, gameLogic::Moves &moves)
+{
+    Square::Piece played_piece = squares[square_pos(move.first.back())]->update_piece(Square::Empty);
+    remove_piece(move.first.back(),played_piece);
+    for(auto it = move.second.begin()+1;it != move.second.end();++it){
+        Square::Piece piece;
+        if((*it).second){
+            if(white_player){
+                piece = Square::WhiteKing;
+            }
+            else{
+                piece = Square::BlackKing;
+            }
+        }else{
+            if(white_player){
+                piece = Square::White;
+            }
+            else{
+                piece = Square::Black;
+            }
+        }
+        add_piece((*it).first,piece);
+    }
+    add_piece(move.second.front().first,played_piece);
+    switch_player();
+    possible_moves = moves;
+    return;
+}
+
 gameLogic::Coordinates gameLogic::board_pos(size_t square_pos)
 {
     return std::make_pair(square_pos%board_side,square_pos/board_side);
@@ -362,11 +425,6 @@ gameLogic::Coordinates gameLogic::board_pos(size_t square_pos)
 bool gameLogic::compere_cordinates(const gameLogic::Coordinates c1, const gameLogic::Coordinates c2)
 {
     return (c1.first == c2.first && c1.second == c2.second);
-}
-
-gameLogic::~gameLogic()
-{
-
 }
 
 void gameLogic::check_direction(std::stack<std::array<bool, 4>> &directions_to_check, size_t direction, gameLogic::Moves &moves, gameLogic::Move &current_move, gameLogic::Coordinates &current_suqare, std::function<gameLogic::Coordinates (gameLogic::Coordinates)> &next_square_func, std::function<bool (gameLogic::Coordinates)> &boudires_condition, bool &move_ended, bool enemy_piece, size_t &longest_move, bool &taken, bool king)
@@ -407,5 +465,12 @@ void gameLogic::check_direction(std::stack<std::array<bool, 4>> &directions_to_c
         }
         directions_to_check.push(array);
         current_suqare = temp_square;
+    }
+}
+
+gameLogic::~gameLogic()
+{
+    if(free_array && squares != nullptr){
+        //delete squares;
     }
 }

@@ -68,7 +68,7 @@ gameGraphicsScene::gameGraphicsScene(QObject *parent)
         }
     }
 
-    game = gameLogic(squares,board_side);
+    game = new gameLogic(squares,board_side);
     highlight_squares();
 }
 
@@ -77,6 +77,7 @@ gameGraphicsScene::~gameGraphicsScene()
     for(size_t i = 0;i < board_side*board_side;++i){
         delete squares[i];
     }
+    delete game;
 }
 
 void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -99,17 +100,18 @@ void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
                     if(thisItem->correct_board_cor((*move).first[move_it])){
                         Square::Piece piece = lastItem->show_piece();
                         if(move_it == 1){
-                            Square::Piece piece2 = squares[game.square_pos(move->second[0])]->update_piece(Square::Empty);
-                            pieces_stack.push_back(std::make_pair(move->second[0],piece2));
+                            Square::Piece piece2 = squares[(*game).square_pos(move->second[0].first)]->update_piece(Square::Empty);
+                            pieces_stack.push_back(std::make_pair(move->second[0].first,piece2));
                         }
                         if(move_it < move->second.size()){
-                            Square::Piece piece2 = squares[game.square_pos(move->second[move_it])]->update_piece(Square::Empty);
-                            pieces_stack.push_back(std::make_pair(move->second[move_it],piece2));
+                            Square::Piece piece2 = squares[(*game).square_pos(move->second[move_it].first)]->update_piece(Square::Empty);
+                            pieces_stack.push_back(std::make_pair(move->second[move_it].first,piece2));
                         }
                         if(move_it >= (*move).first.size()-1){
-                            squares[game.square_pos(move->first[0])]->update_piece(piece);
+                            squares[(*game).square_pos(move->first[0])]->update_piece(piece);
                             return_piece_stack();
-                            game.playerInput((*move));                           
+                            played_moves.emplace(*move);
+                            (*game).playerInput((*move));
                             clear_inputs();
                             break;
                         }else{
@@ -137,10 +139,22 @@ void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
     QGraphicsScene::update();
 }
 
+void gameGraphicsScene::rollback_last_move()
+{
+    if(!played_moves.empty()){
+        clear_inputs();
+        (*game).rollback_move(played_moves.top());
+        played_moves.pop();
+        delete_highlights();
+        highlight_squares();
+        QGraphicsScene::update();
+    }
+}
+
 void gameGraphicsScene::new_first_click(QSquare *thisItem)
 {
     bool found = false;
-    for(auto move: game.possible_moves){
+    for(auto move: (*game).possible_moves){
         if(thisItem->correct_board_cor(move.first[0])){
             found = true;
             break;
@@ -175,7 +189,7 @@ void gameGraphicsScene::return_piece_stack()
         lastItem->update_piece(Square::Empty);
     }
     for(auto p: pieces_stack){
-        squares[game.square_pos(p.first)]->update_piece(p.second);
+        squares[(*game).square_pos(p.first)]->update_piece(p.second);
     }
     pieces_stack.clear();
     return;
@@ -183,10 +197,10 @@ void gameGraphicsScene::return_piece_stack()
 
 void gameGraphicsScene::highlight_moves(QSquare* thisItem)
 {
-    for(auto move: game.possible_moves){
+    for(auto move: (*game).possible_moves){
         if(thisItem->correct_board_cor(move.first[move_it])){
             assert(move_it < move.first.size());
-            squares[game.square_pos(move.first[move_it+1])]->add_highlight();
+            squares[(*game).square_pos(move.first[move_it+1])]->add_highlight();
             move_vec.push_back(move);
         }
     }
@@ -195,15 +209,15 @@ void gameGraphicsScene::highlight_moves(QSquare* thisItem)
 
 void gameGraphicsScene::highlight_squares()
 {
-    for(auto move: game.possible_moves){
-        squares[game.square_pos(move.first[0])]->add_highlight();
+    for(auto move: (*game).possible_moves){
+        squares[(*game).square_pos(move.first[0])]->add_highlight();
     }
 }
 
 void gameGraphicsScene::delete_highlights(QSquare* except_thisItem)
 {
     for(size_t i=0;i<board_side*board_side;++i){
-        if(except_thisItem == nullptr || !(except_thisItem->correct_board_cor(game.board_pos(i)))){
+        if(except_thisItem == nullptr || !(except_thisItem->correct_board_cor((*game).board_pos(i)))){
             squares[i]->delete_highlight();
         }
     }

@@ -17,6 +17,9 @@ public:
     ~gameplayWindow();
 public:
     void start_a_new_game();
+private slots:
+    void on_button_rollback_clicked();
+
 private:
     Ui::gameplayWindow *ui;
     gameGraphicsScene *scene = nullptr;

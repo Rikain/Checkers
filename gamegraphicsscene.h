@@ -11,12 +11,14 @@ public:
     gameGraphicsScene(QObject *parent = nullptr);
     ~gameGraphicsScene();
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void rollback_last_move();
 private:
+    std::stack<gameLogic::Move> played_moves;
     QSquare *lastItem = nullptr;
     QSquare *squares[board_side*board_side];
     std::vector<std::pair<gameLogic::Coordinates,Square::Piece>> pieces_stack;
     gameLogic::Moves move_vec;
-    gameLogic game;
+    gameLogic *game = nullptr;
     size_t move_it = 0;
     void new_first_click(QSquare* thisItem);
     void clear_inputs();

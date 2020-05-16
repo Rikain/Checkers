@@ -37,3 +37,8 @@ void gameplayWindow::delete_board()
         scene = nullptr;
     }
 }
+
+void gameplayWindow::on_button_rollback_clicked()
+{
+    scene->rollback_last_move();
+}
