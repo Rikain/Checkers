@@ -3,6 +3,7 @@
 #include <vector>
 #include "qsquare.h"
 #include <functional>
+#include <stack>
 
 class gameLogic
 {
@@ -20,7 +21,7 @@ public:
     bool switch_player();
     gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_in);
     gameLogic(QSquare **squares_ptr,size_t board_side_in);
-    gameLogic(size_t board_side_in = 10);
+    gameLogic(size_t board_side_in = 8);
     void update_moves();
     Moves possible_moves;
     void playerInput(const Move &player_move);
@@ -35,14 +36,15 @@ private:
     GameState state = inProgress;
     bool white_player = true;
 
-    Coordinates go_in_direction(gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &boudires_condition,bool player_move_condition, bool& move_ended, bool enemy_piece, size_t& longest_move, bool white_player, bool &taken, bool king = false);
+    void check_direction(std::stack<std::array<bool,4>> &directions_to_check,size_t direction,gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &boudires_condition, bool& move_ended, bool enemy_piece, size_t& longest_move, bool &taken, bool king = false);
+    Coordinates go_in_direction(gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &boudires_condition, bool& move_ended, bool enemy_piece, size_t& longest_move, bool &taken);
     void add_move(gameLogic::Moves &moves,Move &current_move,size_t& longest_move, bool &taken, bool enemy_piece);
     void moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_move,gameLogic::Moves &moves, bool &taken,bool king = false);
     void reset_add_move(gameLogic::Moves &moves,Move &current_move,size_t& longest_move);
 
     Square **squares = nullptr;
-    size_t squares_size = 100;
-    size_t board_side = 10;
+    size_t squares_size = 64;
+    size_t board_side = 8;
     //map of pair to Square::Piece
     std::vector<Coordinates> whiteMen;
     std::vector<Coordinates> whiteKings;

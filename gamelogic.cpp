@@ -1,6 +1,5 @@
 #include "gamelogic.h"
 #include "assert.h"
-#include <stack>
 #include <algorithm>
 
 bool gameLogic::switch_player()
@@ -144,7 +143,7 @@ gameLogic::GameState gameLogic::game_state() const
     return state;
 }
 
-gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &boudires_condition,bool player_move_condition, bool& move_ended, bool enemy_piece, size_t& longest_move, bool white_player, bool &taken, bool king)
+gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &current_move,Coordinates &current_suqare,std::function<gameLogic::Coordinates(gameLogic::Coordinates)> &next_square_func , std::function<bool(Coordinates)> &boudires_condition, bool& move_ended, bool enemy_piece, size_t& longest_move, bool &taken)
 {
 
     Coordinates next_square = next_square_func(current_suqare);
@@ -162,7 +161,7 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
         Square::Piece next_piece = squares[square_pos(next_square)]->show_piece();
         if(next_piece == Square::Empty || (std::find(current_move.second.begin(),current_move.second.end(),next_square) != current_move.second.end())){
             if(!enemy_piece){
-                if(current_move.second.size() == 1 && player_move_condition){
+                if(current_move.second.size() == 1){
                     current_move.first.push_back(next_square);
                     add_move(moves,current_move,longest_move,taken,enemy_piece);
                     move_ended = true;
@@ -189,7 +188,7 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
                     return Coordinates();
                 }else{
                     enemy_piece = true;
-                    return go_in_direction(moves,current_move,next_square,next_square_func,boudires_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king); //(musisz pojsc jeszcze raz w ten sam direction gdy jest pierwszy raz enemy piece)
+                    return go_in_direction(moves,current_move,next_square,next_square_func,boudires_condition,move_ended,enemy_piece,longest_move,taken); //(musisz pojsc jeszcze raz w ten sam direction gdy jest pierwszy raz enemy piece)
                 }
             }
         }else{
@@ -199,7 +198,7 @@ gameLogic::Coordinates gameLogic::go_in_direction(gameLogic::Moves &moves,Move &
                     return Coordinates();
                 }else{
                     enemy_piece = true;
-                    return go_in_direction(moves,current_move,next_square,next_square_func,boudires_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king); //(musisz pojsc jeszcze raz w ten sam direction gdy jest pierwszy raz enemy piece)
+                    return go_in_direction(moves,current_move,next_square,next_square_func,boudires_condition,move_ended,enemy_piece,longest_move,taken); //(musisz pojsc jeszcze raz w ten sam direction gdy jest pierwszy raz enemy piece)
                 }
             }else{
                 move_ended = true;
@@ -230,15 +229,19 @@ void gameLogic::add_move(gameLogic::Moves &moves, gameLogic::Move &current_move,
         }
     }else if(current_move.first.size() > longest_move){
         reset_add_move(moves,current_move,longest_move);
+        if(enemy_piece){
+            taken = true;
+        }
     }
     return;
 }
 
 void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_move,gameLogic::Moves &moves, bool &taken,bool king)
 {
-    static std::function<bool(gameLogic::Coordinates)> br_condition = [](Coordinates c){return (c.first < 10 && c.second < 10);};
-    static std::function<bool(gameLogic::Coordinates)> bl_condition = [](Coordinates c){return (c.first >= 0 && c.second < 10);};
-    static std::function<bool(gameLogic::Coordinates)> tr_condition = [](Coordinates c){return (c.first < 10 && c.second >= 0);};
+    const int board_size = gameLogic::board_side;
+    static std::function<bool(gameLogic::Coordinates)> br_condition = [board_size](Coordinates c){return (c.first < board_size && c.second < board_size);};
+    static std::function<bool(gameLogic::Coordinates)> bl_condition = [board_size](Coordinates c){return (c.first >= 0 && c.second < board_size);};
+    static std::function<bool(gameLogic::Coordinates)> tr_condition = [board_size](Coordinates c){return (c.first < board_size && c.second >= 0);};
     static std::function<bool(gameLogic::Coordinates)> tl_condition = [](Coordinates c){return (c.first >= 0 && c.second >= 0);};
 
     static std::function<gameLogic::Coordinates(gameLogic::Coordinates)> br_square = [](gameLogic::Coordinates c){return std::make_pair(c.first + 1,c.second+1);};
@@ -248,7 +251,14 @@ void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_m
 
     std::stack<std::array<bool,4>> directions_to_check;
     Coordinates current_suqare = piece;
-    directions_to_check.push(std::array<bool,4>{true,true,true,true});
+    if(king){
+         directions_to_check.push(std::array<bool,4>{true,true,true,true});
+    }
+    else if(white_player){
+        directions_to_check.push(std::array<bool,4>{false,false,true,true});
+    }else{
+        directions_to_check.push(std::array<bool,4>{true,true,false,false});
+    }
     Move current_move;
     current_move.first.push_back(piece);
     current_move.second.push_back(piece);
@@ -259,64 +269,19 @@ void gameLogic::moves_of_a_piece(gameLogic::Coordinates &piece,size_t &longest_m
         bool move_ended = false;
         bool enemy_piece = false;
         if(directions_to_check.top()[0]){
-
-            bool player_move_condition = !white_player;
-
-            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,br_square,br_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king);
-
-            directions_to_check.top()[0] = false;
-
-            if(!move_ended){
-                directions_to_check.push(std::array<bool,4>{true,true,true,true});
-                current_suqare = temp_square;
-            }
+            check_direction(directions_to_check,0,moves,current_move,current_suqare,br_square,br_condition,move_ended,enemy_piece,longest_move,taken,king);
         }else if(directions_to_check.top()[1]){
-
-            bool player_move_condition = !white_player;
-
-            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,bl_square,bl_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king);
-
-            directions_to_check.top()[1] = false;
-
-            if(!move_ended){
-                directions_to_check.push(std::array<bool,4>{true,true,true,true});
-                current_suqare = temp_square;
-            }
-
+            check_direction(directions_to_check,1,moves,current_move,current_suqare,bl_square,bl_condition,move_ended,enemy_piece,longest_move,taken,king);
         }else if(directions_to_check.top()[2]){
-
-            bool player_move_condition = white_player;
-
-            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,tr_square,tr_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king);
-
-            directions_to_check.top()[2] = false;
-
-            if(!move_ended){
-                directions_to_check.push(std::array<bool,4>{true,true,true,true});
-                current_suqare = temp_square;
-            }
-
+            check_direction(directions_to_check,2,moves,current_move,current_suqare,tr_square,tr_condition,move_ended,enemy_piece,longest_move,taken,king);
         }else if(directions_to_check.top()[3]){
-
-            bool player_move_condition = white_player;
-
-            gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,tl_square,tl_condition,player_move_condition,move_ended,enemy_piece,longest_move,white_player,taken,king);
-
-            directions_to_check.top()[3] = false;
-
-            if(!move_ended){
-                directions_to_check.push(std::array<bool,4>{true,true,true,true});
-                current_suqare = temp_square;
-            }
-
+            check_direction(directions_to_check,3,moves,current_move,current_suqare,tl_square,tl_condition,move_ended,enemy_piece,longest_move,taken,king);
         }else{
             directions_to_check.pop();
             current_move.first.pop_back();
             current_suqare = current_move.first.back();
             current_move.second.pop_back();
-            if(current_move.first.size() == 1){
-                assert(current_move.second.size() == 1);
-            }
+            assert((current_move.first.size() != 1 && current_move.second.size() != 1) || (current_move.first.size() == 1 && current_move.second.size() == 1));
         }
     }
 }
@@ -402,4 +367,45 @@ bool gameLogic::compere_cordinates(const gameLogic::Coordinates c1, const gameLo
 gameLogic::~gameLogic()
 {
 
+}
+
+void gameLogic::check_direction(std::stack<std::array<bool, 4>> &directions_to_check, size_t direction, gameLogic::Moves &moves, gameLogic::Move &current_move, gameLogic::Coordinates &current_suqare, std::function<gameLogic::Coordinates (gameLogic::Coordinates)> &next_square_func, std::function<bool (gameLogic::Coordinates)> &boudires_condition, bool &move_ended, bool enemy_piece, size_t &longest_move, bool &taken, bool king)
+{
+    //direction order is: BR,BL,TR,TL
+
+    gameLogic::Coordinates temp_square = go_in_direction(moves,current_move,current_suqare,next_square_func,boudires_condition,move_ended,enemy_piece,longest_move,taken);
+
+    directions_to_check.top()[direction] = false;
+
+    if(!move_ended){
+        std::array<bool,4> array;
+        if(king){
+            switch(direction){
+            case 0:
+                array = std::array<bool,4>{true,true,true,false};
+                break;
+            case 1:
+                array = std::array<bool,4>{true,true,false,true};
+                break;
+            case 2:
+                array = std::array<bool,4>{true,false,true,true};
+                break;
+            case 3:
+                array = std::array<bool,4>{false,true,true,true};
+                break;
+            default:
+                assert(true);
+                // by default all are false
+                break;
+            }
+        }else{
+            if(white_player){
+                array = std::array<bool,4>{false,false,true,true};
+            }else{
+                array = std::array<bool,4>{true,true,false,false};
+            }
+        }
+        directions_to_check.push(array);
+        current_suqare = temp_square;
+    }
 }
