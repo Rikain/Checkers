@@ -5,14 +5,14 @@
 class GTSAlgortihms : public AI
 {
     int height;
-    static int min_max(int h, gameLogic* game, bool max_player, int alpha, int beta, bool pruning);
+    static int min_max(int h, gameLogic* game, bool max_player, int alpha, int beta, bool pruning,AI::Eval evaluation);
     gameLogic::Move do_min_max();
     int alpha_beta();
     static int state_evaluation(gameLogic* game);
     void reset();
     bool pruning = false;
 public:
-    GTSAlgortihms(int height_in, bool pruning_in, gameLogic *game_in = nullptr);
+    GTSAlgortihms(int height_in, bool pruning_in, AI::Eval evalutaion_in = AI::PiecesOnly, gameLogic *game_in = nullptr);
     gameLogic::Move return_a_move() override;
     void set_height(int h);
     void set_pruning(bool prune);

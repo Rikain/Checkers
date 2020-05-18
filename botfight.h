@@ -14,7 +14,7 @@ class botFight
 private:
     void flip_ai(AI* current_ai);
 public:
-    botFight(bool pruning1 = false, int height1 = 5, bool pruning2 = false, int height2 = 5);
+    botFight(bool pruning1, int height1, AI::Eval eval1, bool pruning2, int height2, AI::Eval eval2);
     ~botFight();
     std::tuple<int,int,int> make_them_fight(int times=10, bool ai1_is_white = true); //win-lose-draw
     void print_a_fight(int times=10, bool ai1_is_white = true);

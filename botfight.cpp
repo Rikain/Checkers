@@ -13,13 +13,13 @@ void botFight::flip_ai(AI *current_ai)
     }
 }
 
-botFight::botFight(bool pruning1, int height1, bool pruning2, int height2)
+botFight::botFight(bool pruning1, int height1, AI::Eval eval1, bool pruning2, int height2, AI::Eval eval2)
 {
     game = new gameLogic();
     game_ai1 = game->clone();
     game_ai2 = game->clone();
-    ai1 = new GTSAlgortihms(height1,pruning1);
-    ai2 = new GTSAlgortihms(height2,pruning2);
+    ai1 = new GTSAlgortihms(height1,pruning1,eval1);
+    ai2 = new GTSAlgortihms(height2,pruning2,eval2);
 }
 
 botFight::~botFight()
@@ -46,8 +46,8 @@ std::tuple<int, int, int> botFight::make_them_fight(int times, bool ai1_is_white
     int wins = 0;
     int loses = 0;
     int draws = 0;
-    assert(ai1 == nullptr);
-    assert(ai2 == nullptr);
+    assert(ai1 != nullptr);
+    assert(ai2 != nullptr);
     for(int i =0;i<times;++i){
         gameLogic* their_game = game->clone();
         ai1->change_game_ptr(their_game);
@@ -63,13 +63,13 @@ std::tuple<int, int, int> botFight::make_them_fight(int times, bool ai1_is_white
             flip_ai(ai_to_move);
         }
         if(their_game->game_state() == gameLogic::whiteWon){
-            //std::cout<< "AI 1 won!" << std::endl;
+            std::cout<< "AI 1 won!" << std::endl;
             ++wins;
         }else if(their_game->game_state() == gameLogic::blackWon){
-            //std::cout<< "AI 1 lost!" << std::endl;
+            std::cout<< "AI 1 lost!" << std::endl;
             ++loses;
         }else if(their_game->game_state() == gameLogic::draw){
-            //std::cout<< "AI 1 draw!" << std::endl;
+            std::cout<< "AI 1 draw!" << std::endl;
             ++draws;
         }
         delete their_game;

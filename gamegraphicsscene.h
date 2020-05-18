@@ -8,7 +8,7 @@ class gameGraphicsScene : public QGraphicsScene
 {
     Q_OBJECT
 public:
-    static constexpr size_t board_side = 8;
+    static constexpr size_t board_side = 10;
     gameGraphicsScene(int AI_height = 0, QObject *parent = nullptr);
     ~gameGraphicsScene();
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;

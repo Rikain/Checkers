@@ -2,11 +2,11 @@
 #include <thread>
 #include <future>
 
-int GTSAlgortihms::min_max(int h, gameLogic* game, bool max_player, int alpha, int beta, bool pruning)
+int GTSAlgortihms::min_max(int h, gameLogic* game, bool max_player, int alpha, int beta, bool pruning,AI::Eval evaluation)
 {
     assert(h >= 0);
     if(h == 0 || game->game_state() != gameLogic::GameState::inProgress){
-       return AI::state_evaluation(game);
+       return AI::evaluate(game,evaluation);
     }
     if(max_player){
         int value = INT_MIN;
@@ -14,7 +14,7 @@ int GTSAlgortihms::min_max(int h, gameLogic* game, bool max_player, int alpha, i
         for(auto move : moves){
             int empty_move_state = game->moves_towards_draw();
             game->playerInput(move);
-            value = std::max(value,min_max(h-1,game,false,alpha,beta,pruning));
+            value = std::max(value,min_max(h-1,game,false,alpha,beta,pruning,evaluation));
             game->rollback_move_no_update(move,moves,empty_move_state);
             if(pruning){
                 alpha = std::max(alpha,value);
@@ -30,7 +30,7 @@ int GTSAlgortihms::min_max(int h, gameLogic* game, bool max_player, int alpha, i
         for(auto move : moves){
             int empty_move_state = game->moves_towards_draw();
             game->playerInput(move);
-            value = std::min(value,min_max(h-1,game,true,alpha,beta,pruning));
+            value = std::min(value,min_max(h-1,game,true,alpha,beta,pruning,evaluation));
             game->rollback_move_no_update(move,moves,empty_move_state);
             if(pruning){
                 beta = std::min(beta,value);
@@ -58,7 +58,7 @@ gameLogic::Move GTSAlgortihms::do_min_max()
     for(auto move : game->possible_moves){
         new_game[i] = game->clone();
         new_game[i]->playerInput(move);
-        values[i] = std::async(min_max,h,new_game[i],!max_player,alpha,beta,pruning);//min_max(h,new_game[i],max_player);// //std::launch::async,
+        values[i] = std::async(min_max,h,new_game[i],!max_player,alpha,beta,pruning,evaluation);//min_max(h,new_game[i],max_player);// //std::launch::async,
         ++i;
     }
 
@@ -101,8 +101,8 @@ void GTSAlgortihms::reset()
 {
 }
 
-GTSAlgortihms::GTSAlgortihms(int height_in, bool pruning_in, gameLogic *game_in)
-    :AI(game_in),height(height_in),pruning(pruning_in)
+GTSAlgortihms::GTSAlgortihms(int height_in, bool pruning_in,AI::Eval evalutaion_in, gameLogic *game_in)
+    :AI(evalutaion_in,game_in),height(height_in),pruning(pruning_in)
 {
 }
 

@@ -20,7 +20,7 @@ public:
 public:
     gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_in, bool free_array_in = false,bool free_squares_in = false,int empty_moves_in = 0);
     gameLogic(QSquare **squares_ptr,size_t board_side_in);
-    gameLogic(size_t board_side_in = 8);
+    gameLogic(size_t board_side_in = 10);
     gameLogic(gameLogic &&game) = delete;
     gameLogic(gameLogic &game) = delete;
     gameLogic& operator=(const gameLogic& rhs) = delete;
@@ -55,8 +55,8 @@ private:
     bool free_array = false;
     bool free_squares = false;
     Square **squares = nullptr;
-    size_t squares_size = 64;
-    size_t board_side = 8;
+    size_t squares_size = 100;
+    size_t board_side = 10;
     //map of pair to Square::Piece
     std::vector<Coordinates> whiteMen;
     std::vector<Coordinates> whiteKings;
