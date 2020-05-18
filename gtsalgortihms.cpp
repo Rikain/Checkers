@@ -2,32 +2,42 @@
 #include <thread>
 #include <future>
 
-int GTSAlgortihms::min_max(int h, gameLogic* game, bool max_player)
+int GTSAlgortihms::min_max(int h, gameLogic* game, bool max_player, int alpha, int beta, bool pruning)
 {
     assert(h >= 0);
     if(h == 0 || game->game_state() != gameLogic::GameState::inProgress){
-       return state_evaluation(game);
+       return AI::state_evaluation(game);
     }
     if(max_player){
         int value = INT_MIN;
-        max_player = !max_player;
         gameLogic::Moves moves = game->possible_moves;
         for(auto move : moves){
             int empty_move_state = game->moves_towards_draw();
             game->playerInput(move);
-            value = std::max(value,min_max(h-1,game,max_player));
+            value = std::max(value,min_max(h-1,game,false,alpha,beta,pruning));
             game->rollback_move_no_update(move,moves,empty_move_state);
+            if(pruning){
+                alpha = std::max(alpha,value);
+                if(alpha >= beta){
+                    break;
+                }
+            }
         }
         return value;
     }else{
         int value = INT_MAX;
-        max_player = !max_player;
         gameLogic::Moves moves = game->possible_moves;
         for(auto move : moves){
             int empty_move_state = game->moves_towards_draw();
             game->playerInput(move);
-            value = std::min(value,min_max(h-1,game,max_player));
+            value = std::min(value,min_max(h-1,game,true,alpha,beta,pruning));
             game->rollback_move_no_update(move,moves,empty_move_state);
+            if(pruning){
+                beta = std::min(beta,value);
+                if(alpha >= beta){
+                    break;
+                }
+            }
         }
         return value;
     }
@@ -41,16 +51,18 @@ gameLogic::Move GTSAlgortihms::do_min_max()
     //int values[len];
     gameLogic *new_game[len];
     std::vector<int> correct_move;
-    bool max_player = !game->player_color();
+    bool max_player = game->player_color();
     int i = 0;
+    int alpha = INT_MIN;
+    int beta = INT_MAX;
     for(auto move : game->possible_moves){
         new_game[i] = game->clone();
         new_game[i]->playerInput(move);
-        values[i] = std::async(min_max,h,new_game[i],max_player);//min_max(h,new_game[i],max_player);// //std::launch::async,
+        values[i] = std::async(min_max,h,new_game[i],!max_player,alpha,beta,pruning);//min_max(h,new_game[i],max_player);// //std::launch::async,
         ++i;
     }
 
-    if(game->player_color()){
+    if(max_player){
         int max = INT_MIN;
         for(int i = 0;i < len;++i){
             int temp = values[i].get();
@@ -84,40 +96,6 @@ gameLogic::Move GTSAlgortihms::do_min_max()
     return game->possible_moves[correct_move[index]];
 }
 
-int GTSAlgortihms::state_evaluation(gameLogic* game)
-{
-    if(game->game_state() != gameLogic::inProgress){
-        int value = 0;
-        switch(game->game_state()){
-        case(gameLogic::whiteWon):
-            value = INT_MAX;
-            break;
-        case(gameLogic::blackWon):
-            value = INT_MIN;
-        default:
-            //draw
-            break;
-        }
-        return value;
-    }else{
-        int value = 0;
-        std::array<std::vector<gameLogic::Coordinates>*,4> pieces = game->pieces();
-        for(auto piece : (*(pieces[0]))){
-            value += 1;//(10 + game->board_size() - (piece.second+1));
-        }
-        for(auto piece : (*(pieces[1]))){
-            value -= 1;//(10 + piece.second);
-        }
-        for(auto piece : (*(pieces[2]))){
-            value += 2;//(game->board_size() + 15);
-        }
-        for(auto piece : (*(pieces[3]))){
-            value -= 2;//(game->board_size() + 15);
-        }
-        return value;
-    }
-    return 0;
-}
 
 void GTSAlgortihms::reset()
 {
@@ -130,15 +108,16 @@ GTSAlgortihms::GTSAlgortihms(int height_in, bool pruning_in, gameLogic *game_in)
 
 gameLogic::Move GTSAlgortihms::return_a_move()
 {
-    if(pruning){
-        return do_min_max();
-    }else{
-        return do_min_max();
-    }
+   return do_min_max();
 }
 
 void GTSAlgortihms::set_height(int h)
 {
     assert(h > 0);
     height = h;
+}
+
+void GTSAlgortihms::set_pruning(bool prune)
+{
+    pruning = prune;
 }

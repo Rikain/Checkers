@@ -46,6 +46,8 @@ std::tuple<int, int, int> botFight::make_them_fight(int times, bool ai1_is_white
     int wins = 0;
     int loses = 0;
     int draws = 0;
+    assert(ai1 == nullptr);
+    assert(ai2 == nullptr);
     for(int i =0;i<times;++i){
         gameLogic* their_game = game->clone();
         ai1->change_game_ptr(their_game);
@@ -61,18 +63,20 @@ std::tuple<int, int, int> botFight::make_them_fight(int times, bool ai1_is_white
             flip_ai(ai_to_move);
         }
         if(their_game->game_state() == gameLogic::whiteWon){
-            std::cout<< "AI 1 won!" << std::endl;
+            //std::cout<< "AI 1 won!" << std::endl;
             ++wins;
         }else if(their_game->game_state() == gameLogic::blackWon){
-            std::cout<< "AI 1 lost!" << std::endl;
+            //std::cout<< "AI 1 lost!" << std::endl;
             ++loses;
         }else if(their_game->game_state() == gameLogic::draw){
-            std::cout<< "AI 1 draw!" << std::endl;
+            //std::cout<< "AI 1 draw!" << std::endl;
             ++draws;
         }
         delete their_game;
         their_game = nullptr;
     }
+    ai1->change_game_ptr(nullptr);
+    ai2->change_game_ptr(nullptr);
     return std::make_tuple(wins,loses,draws);
 }
 

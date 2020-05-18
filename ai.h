@@ -6,7 +6,8 @@
 class AI
 {
 protected:
-    gameLogic *game;
+    gameLogic *game = nullptr;
+    static int state_evaluation(gameLogic* game);
 public:
     std::default_random_engine gen;
     gameLogic* change_game_ptr(gameLogic* new_game);
