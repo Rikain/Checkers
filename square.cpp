@@ -5,6 +5,11 @@ Square::Square(int board_x_in,int board_y_in,Piece piece_in)
 {
 }
 
+Square::Square(std::pair<int, int> coordinates, Square::Piece piece_in)
+    :board_x(coordinates.first),board_y(coordinates.second),piece(piece_in)
+{
+}
+
 std::pair<int, int> Square::coordinates() const
 {
     return std::make_pair(board_x,board_y);

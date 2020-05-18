@@ -18,6 +18,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     ai.cpp \
     application.cpp \
+    botfight.cpp \
     gamegraphicsscene.cpp \
     gamelogic.cpp \
     gameplaywindow.cpp \
@@ -30,6 +31,7 @@ SOURCES += \
 HEADERS += \
     ai.h \
     application.h \
+    botfight.h \
     gamegraphicsscene.h \
     gamelogic.h \
     gameplaywindow.h \

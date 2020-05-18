@@ -6,9 +6,8 @@ class AI
 {
 protected:
     gameLogic *game;
-    std::function<gameLogic::Move()> move_function;
 public:
-    gameLogic::Move return_a_move();
+    virtual gameLogic::Move return_a_move() = 0;
     AI(gameLogic *game);
     virtual ~AI();
 };

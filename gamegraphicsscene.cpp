@@ -1,8 +1,9 @@
 #include "gamegraphicsscene.h"
 #include <QGraphicsSceneMouseEvent>
 #include <QDebug>
+#include <QThread>
 
-gameGraphicsScene::gameGraphicsScene(QObject *parent)
+gameGraphicsScene::gameGraphicsScene(int AI_height, QObject *parent)
     :QGraphicsScene(parent)
 {
     bool black = false;
@@ -70,12 +71,19 @@ gameGraphicsScene::gameGraphicsScene(QObject *parent)
 
     game = new gameLogic(squares,board_side);
     highlight_squares();
+    if(AI_height != 0){
+        assert(AI_height < 11);
+        computer_player = new GTSAlgortihms(game,AI_height,false);
+    }
 }
 
 gameGraphicsScene::~gameGraphicsScene()
 {
     for(size_t i = 0;i < board_side*board_side;++i){
         delete squares[i];
+    }
+    if(computer_player != nullptr){
+        delete computer_player;
     }
     delete game;
 }
@@ -110,9 +118,16 @@ void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
                         if(move_it >= (*move).first.size()-1){
                             squares[(*game).square_pos(move->first[0])]->update_piece(piece);
                             return_piece_stack();
-                            played_moves.emplace(*move);
-                            (*game).playerInput((*move));
+                            if((*game).playerInput((*move))){
+                                played_moves.emplace(*move);
+                            }
                             clear_inputs();
+                            if(computer_player != nullptr && !check_if_ended()){
+                                computer_move();
+                            }
+                            if(check_if_ended()){
+                                end_the_game();
+                            }
                             break;
                         }else{
                             lastItem->update_piece(Square::Empty);
@@ -146,6 +161,10 @@ void gameGraphicsScene::rollback_last_move()
         (*game).rollback_move(played_moves.top());
         played_moves.pop();
         delete_highlights();
+        if((computer_player != nullptr) && !game->player_color()){ // if human player won rollback only once
+            (*game).rollback_move(played_moves.top());
+            played_moves.pop();
+        }
         highlight_squares();
         QGraphicsScene::update();
     }
@@ -223,4 +242,24 @@ void gameGraphicsScene::delete_highlights(QSquare* except_thisItem)
     }
     move_vec.clear();
     return;
+}
+
+bool gameGraphicsScene::check_if_ended()
+{
+    return(game->game_state() != gameLogic::inProgress);
+}
+
+void gameGraphicsScene::end_the_game()
+{
+    assert(check_if_ended());
+}
+
+void gameGraphicsScene::computer_move()
+{
+    gameLogic::Move computer_move = computer_player->return_a_move();
+    if(game->playerInput(computer_move)){
+        played_moves.emplace(computer_move);
+    }
+    clear_inputs();
+    QGraphicsScene::update();
 }

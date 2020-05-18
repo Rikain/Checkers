@@ -2,14 +2,19 @@
 #include "assert.h"
 #include <algorithm>
 
+bool gameLogic::player_color()
+{
+    return white_player;
+}
+
 bool gameLogic::switch_player()
 {
     white_player = !white_player;
     return white_player;
 }
 
-gameLogic::gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_in)
-    :squares(squares_ptr)
+gameLogic::gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_in , bool free_array_in,bool free_squares_in)
+    :free_array(free_array_in),free_squares(free_squares_in),squares(squares_ptr)
 {
     assert(array_size == squares_size);
     assert(board_side_in == board_side);
@@ -88,8 +93,27 @@ gameLogic::gameLogic(size_t board_side_in)
     }
 }
 
+gameLogic* gameLogic::clone()
+{
+    Square** new_squares = new Square*[board_side*board_side];
+    size_t new_squares_size = squares_size;
+    size_t new_board_side = board_side;
+    for(size_t i = 0; i < new_squares_size; ++i){
+        new_squares[i] = new Square(squares[i]->coordinates(),squares[i]->show_piece());
+    }
+    return new gameLogic(new_squares,new_squares_size,new_board_side,true,true);
+}
+
+gameLogic::GameState gameLogic::game_state()
+{
+    return state;
+}
+
 void gameLogic::update_moves()
 {
+    if(game_state() != gameLogic::inProgress){
+        return;
+    }
     gameLogic::Moves moves;
     std::vector<gameLogic::Coordinates>* men;
     std::vector<gameLogic::Coordinates>* kings;
@@ -125,8 +149,11 @@ void gameLogic::update_moves()
     possible_moves = moves;
 }
 
-void gameLogic::playerInput(const gameLogic::Move &player_move)
+bool gameLogic::playerInput(const gameLogic::Move &player_move)
 {
+    if(game_state() != gameLogic::inProgress){
+        return false;
+    }
     Square::Piece played_piece = squares[square_pos(player_move.first[0])]->update_piece(Square::Empty);
     remove_piece(player_move.first.front(),played_piece);
     for(auto it = player_move.second.begin()+1;it != player_move.second.end();++it){
@@ -136,7 +163,7 @@ void gameLogic::playerInput(const gameLogic::Move &player_move)
     add_piece(player_move.first.back(),played_piece);
     switch_player();
     update_moves();
-    return;
+    return true;
 }
 
 gameLogic::GameState gameLogic::game_state() const
@@ -359,8 +386,9 @@ void gameLogic::add_piece(gameLogic::Coordinates cor, Square::Piece &piece)
     }
 }
 
-void gameLogic::rollback_move(gameLogic::Move& move)
+void gameLogic::rollback(gameLogic::Move &move)
 {
+    state = gameLogic::inProgress;
     Square::Piece played_piece = squares[square_pos(move.first.back())]->update_piece(Square::Empty);
     remove_piece(move.first.back(),played_piece);
     for(auto it = move.second.begin()+1;it != move.second.end();++it){
@@ -384,35 +412,18 @@ void gameLogic::rollback_move(gameLogic::Move& move)
     }
     add_piece(move.second.front().first,played_piece);
     switch_player();
+}
+
+void gameLogic::rollback_move(gameLogic::Move& move)
+{
+    rollback(move);
     update_moves();
     return;
 }
 
 void gameLogic::rollback_move_no_update(gameLogic::Move &move, gameLogic::Moves &moves)
 {
-    Square::Piece played_piece = squares[square_pos(move.first.back())]->update_piece(Square::Empty);
-    remove_piece(move.first.back(),played_piece);
-    for(auto it = move.second.begin()+1;it != move.second.end();++it){
-        Square::Piece piece;
-        if((*it).second){
-            if(white_player){
-                piece = Square::WhiteKing;
-            }
-            else{
-                piece = Square::BlackKing;
-            }
-        }else{
-            if(white_player){
-                piece = Square::White;
-            }
-            else{
-                piece = Square::Black;
-            }
-        }
-        add_piece((*it).first,piece);
-    }
-    add_piece(move.second.front().first,played_piece);
-    switch_player();
+    rollback(move);
     possible_moves = moves;
     return;
 }
@@ -425,6 +436,21 @@ gameLogic::Coordinates gameLogic::board_pos(size_t square_pos)
 bool gameLogic::compere_cordinates(const gameLogic::Coordinates c1, const gameLogic::Coordinates c2)
 {
     return (c1.first == c2.first && c1.second == c2.second);
+}
+
+Square **gameLogic::board_ptr()
+{
+    return squares;
+}
+
+std::array<std::vector<gameLogic::Coordinates> *, 4> gameLogic::pieces()
+{
+    return std::array<std::vector<gameLogic::Coordinates> *, 4>{&whiteMen,&blackMen,&whiteKings,&blackKings};
+}
+
+size_t gameLogic::board_size()
+{
+    return board_side;
 }
 
 void gameLogic::check_direction(std::stack<std::array<bool, 4>> &directions_to_check, size_t direction, gameLogic::Moves &moves, gameLogic::Move &current_move, gameLogic::Coordinates &current_suqare, std::function<gameLogic::Coordinates (gameLogic::Coordinates)> &next_square_func, std::function<bool (gameLogic::Coordinates)> &boudires_condition, bool &move_ended, bool enemy_piece, size_t &longest_move, bool &taken, bool king)
@@ -471,6 +497,11 @@ void gameLogic::check_direction(std::stack<std::array<bool, 4>> &directions_to_c
 gameLogic::~gameLogic()
 {
     if(free_array && squares != nullptr){
-        //delete squares;
+        if(free_squares){
+            for(size_t i =0; i < squares_size;++i){
+                delete squares[i];
+            }
+        }
+        delete squares;
     }
 }
