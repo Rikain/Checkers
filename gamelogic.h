@@ -18,7 +18,7 @@ public:
     typedef std::pair<std::vector<Coordinates>,std::vector<std::pair<Coordinates,bool>>> Move; //vecotr of moving piece cor , vector of deleted piece cor, is_a_king
     typedef std::vector<Move> Moves;
 public:
-    gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_in, bool free_array_in = false,bool free_squares_in = false);
+    gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_in, bool free_array_in = false,bool free_squares_in = false,int empty_moves_in = 0);
     gameLogic(QSquare **squares_ptr,size_t board_side_in);
     gameLogic(size_t board_side_in = 8);
     gameLogic(gameLogic &&game) = delete;
@@ -36,16 +36,20 @@ public:
     bool playerInput(const Move &player_move);
     GameState game_state() const;
     int square_pos(Coordinates board_pos);
-    void rollback_move(Move& move);
-    void rollback_move_no_update(Move& move,Moves& moves);
+    void rollback_move(Move& move, int empty_moves_in = 0);
+    void rollback_move_no_update(Move& move,Moves& moves, int empty_moves_in = 0);
     Coordinates board_pos(size_t square_pos);
     static bool compere_cordinates(const Coordinates c1, const Coordinates c2);
     Square **board_ptr();
     std::array<std::vector<Coordinates>*,4> pieces();
     size_t board_size();
+    int moves_towards_draw();
 public:
     Moves possible_moves;
 private:
+    int pieces_counter;
+    int empty_moves = 0;
+    static constexpr int moves_before_draw = 5;
     GameState state = inProgress;
     bool white_player = true;
     bool free_array = false;
@@ -66,7 +70,7 @@ private:
     void reset_add_move(gameLogic::Moves &moves,Move &current_move,size_t& longest_move);
     void remove_piece(Coordinates cor, Square::Piece &piece);
     void add_piece(Coordinates cor, Square::Piece &piece);
-    void rollback(Move& move);
+    void rollback(Move& move, int empty_moves_in = 0);
 };
 
 #endif // GAMELOGIC_H

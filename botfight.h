@@ -2,10 +2,10 @@
 #define BOTFIGHT_H
 
 
-class botfight
+class botFight
 {
 public:
-    botfight();
+    botFight(bool pruingin1, int height1, bool pruning2, int height2);
 };
 
 #endif // BOTFIGHT_H

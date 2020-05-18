@@ -74,6 +74,11 @@ gameGraphicsScene::gameGraphicsScene(int AI_height, QObject *parent)
     if(AI_height != 0){
         assert(AI_height < 11);
         computer_player = new GTSAlgortihms(game,AI_height,false);
+        std::uniform_int_distribution<> dist(0,1);
+        human_player = dist(computer_player->gen);
+        if(!human_player){
+            computer_move();
+        }
     }
 }
 
@@ -90,64 +95,67 @@ gameGraphicsScene::~gameGraphicsScene()
 
 void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
-    QGraphicsItem *item = itemAt(mouseEvent->scenePos(), QTransform());
-    QSquare* thisItem = dynamic_cast<QSquare*>(item);
-    if(lastItem == nullptr){
-        assert(this->selectedItems().length() <= 1);
-        if(thisItem->show_piece() == Square::Empty){
-            clear_inputs();
-        }else{
-            new_first_click(thisItem);
-        }
-    }
-    else{
-        if(move_vec.size() > 0){
-            if(thisItem->is_highlighted() && (thisItem->show_piece() == Square::Empty)){
-                ++move_it;
-                for(gameLogic::Moves::iterator move = move_vec.begin();move != move_vec.end();){
-                    if(thisItem->correct_board_cor((*move).first[move_it])){
-                        Square::Piece piece = lastItem->show_piece();
-                        if(move_it == 1){
-                            Square::Piece piece2 = squares[(*game).square_pos(move->second[0].first)]->update_piece(Square::Empty);
-                            pieces_stack.push_back(std::make_pair(move->second[0].first,piece2));
-                        }
-                        if(move_it < move->second.size()){
-                            Square::Piece piece2 = squares[(*game).square_pos(move->second[move_it].first)]->update_piece(Square::Empty);
-                            pieces_stack.push_back(std::make_pair(move->second[move_it].first,piece2));
-                        }
-                        if(move_it >= (*move).first.size()-1){
-                            squares[(*game).square_pos(move->first[0])]->update_piece(piece);
-                            return_piece_stack();
-                            if((*game).playerInput((*move))){
-                                played_moves.emplace(*move);
-                            }
-                            clear_inputs();
-                            if(computer_player != nullptr && !check_if_ended()){
-                                computer_move();
-                            }
-                            if(check_if_ended()){
-                                end_the_game();
-                            }
-                            break;
-                        }else{
-                            lastItem->update_piece(Square::Empty);
-                            thisItem->update_piece(piece);
-                            lastItem = thisItem;
-                            delete_highlights();
-                            highlight_moves(thisItem);
-                            break;
-                        }
-                    }else{
-                        move = move_vec.erase(move);
-                    }
-                }
-            }else if(thisItem->show_piece() != Square::Empty){
+    if(!check_if_ended()){
+        QGraphicsItem *item = itemAt(mouseEvent->scenePos(), QTransform());
+        QSquare* thisItem = dynamic_cast<QSquare*>(item);
+        if(lastItem == nullptr){
+            assert(this->selectedItems().length() <= 1);
+            if(thisItem->show_piece() == Square::Empty){
+                clear_inputs();
+            }else{
                 new_first_click(thisItem);
+            }
+        }
+        else{
+            if(move_vec.size() > 0){
+                if(thisItem->is_highlighted() && (thisItem->show_piece() == Square::Empty)){
+                    ++move_it;
+                    for(gameLogic::Moves::iterator move = move_vec.begin();move != move_vec.end();){
+                        if(thisItem->correct_board_cor((*move).first[move_it])){
+                            Square::Piece piece = lastItem->show_piece();
+                            if(move_it == 1){
+                                Square::Piece piece2 = squares[(*game).square_pos(move->second[0].first)]->update_piece(Square::Empty);
+                                pieces_stack.push_back(std::make_pair(move->second[0].first,piece2));
+                            }
+                            if(move_it < move->second.size()){
+                                Square::Piece piece2 = squares[(*game).square_pos(move->second[move_it].first)]->update_piece(Square::Empty);
+                                pieces_stack.push_back(std::make_pair(move->second[move_it].first,piece2));
+                            }
+                            if(move_it >= (*move).first.size()-1){
+                                squares[(*game).square_pos(move->first[0])]->update_piece(piece);
+                                return_piece_stack();
+                                int move_state = game->moves_towards_draw();
+                                if((*game).playerInput((*move))){
+                                    played_moves.emplace(std::make_pair(*move,move_state));
+                                }
+                                clear_inputs();
+                                if(computer_player != nullptr && !check_if_ended()){
+                                    computer_move();
+                                }
+                                if(check_if_ended()){
+                                    end_the_game();
+                                }
+                                break;
+                            }else{
+                                lastItem->update_piece(Square::Empty);
+                                thisItem->update_piece(piece);
+                                lastItem = thisItem;
+                                delete_highlights();
+                                highlight_moves(thisItem);
+                                break;
+                            }
+                        }else{
+                            move = move_vec.erase(move);
+                        }
+                    }
+                }else if(thisItem->show_piece() != Square::Empty){
+                    new_first_click(thisItem);
+                }else{
+                    clear_inputs();
+                }
             }else{
                 clear_inputs();
             }
-        }else{
-            clear_inputs();
         }
     }
     QGraphicsScene::mousePressEvent(mouseEvent);
@@ -158,11 +166,11 @@ void gameGraphicsScene::rollback_last_move()
 {
     if(!played_moves.empty()){
         clear_inputs();
-        (*game).rollback_move(played_moves.top());
+        (*game).rollback_move(played_moves.top().first,played_moves.top().second);
         played_moves.pop();
         delete_highlights();
-        if((computer_player != nullptr) && !game->player_color()){ // if human player won rollback only once
-            (*game).rollback_move(played_moves.top());
+        if((computer_player != nullptr) && !((game->player_color() == human_player))){ // if human player won rollback only once
+            (*game).rollback_move(played_moves.top().first,played_moves.top().second);
             played_moves.pop();
         }
         highlight_squares();
@@ -252,13 +260,15 @@ bool gameGraphicsScene::check_if_ended()
 void gameGraphicsScene::end_the_game()
 {
     assert(check_if_ended());
+    delete_highlights();
 }
 
 void gameGraphicsScene::computer_move()
 {
     gameLogic::Move computer_move = computer_player->return_a_move();
+    int move_state = game->moves_towards_draw();
     if(game->playerInput(computer_move)){
-        played_moves.emplace(computer_move);
+        played_moves.emplace(std::make_pair(computer_move,move_state));
     }
     clear_inputs();
     QGraphicsScene::update();

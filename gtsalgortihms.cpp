@@ -13,9 +13,10 @@ int GTSAlgortihms::min_max(int h, gameLogic* game, bool max_player)
         max_player = !max_player;
         gameLogic::Moves moves = game->possible_moves;
         for(auto move : moves){
+            int empty_move_state = game->moves_towards_draw();
             game->playerInput(move);
             value = std::max(value,min_max(h-1,game,max_player));
-            game->rollback_move_no_update(move,moves);
+            game->rollback_move_no_update(move,moves,empty_move_state);
         }
         return value;
     }else{
@@ -23,9 +24,10 @@ int GTSAlgortihms::min_max(int h, gameLogic* game, bool max_player)
         max_player = !max_player;
         gameLogic::Moves moves = game->possible_moves;
         for(auto move : moves){
+            int empty_move_state = game->moves_towards_draw();
             game->playerInput(move);
             value = std::min(value,min_max(h-1,game,max_player));
-            game->rollback_move_no_update(move,moves);
+            game->rollback_move_no_update(move,moves,empty_move_state);
         }
         return value;
     }
@@ -124,7 +126,6 @@ void GTSAlgortihms::reset()
 GTSAlgortihms::GTSAlgortihms(gameLogic *game_in, int height_in, bool pruning_in)
     :AI(game_in),height(height_in),pruning(pruning_in)
 {
-    gen.seed(std::random_device{}());
 }
 
 gameLogic::Move GTSAlgortihms::return_a_move()

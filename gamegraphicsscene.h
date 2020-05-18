@@ -15,13 +15,14 @@ public:
     void rollback_last_move();
 private:
     AI* computer_player = nullptr;
-    std::stack<gameLogic::Move> played_moves;
+    std::stack<std::pair<gameLogic::Move,int>> played_moves;
     QSquare *lastItem = nullptr;
     QSquare *squares[board_side*board_side];
     std::vector<std::pair<gameLogic::Coordinates,Square::Piece>> pieces_stack;
     gameLogic::Moves move_vec;
     gameLogic *game = nullptr;
     size_t move_it = 0;
+    bool human_player = true;
     void new_first_click(QSquare* thisItem);
     void clear_inputs();
     void return_piece_stack();

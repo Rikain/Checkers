@@ -1,6 +1,6 @@
 #include "botfight.h"
 
-botfight::botfight()
+botFight::botFight(bool pruingin1, int height1, bool pruning2, int height)
 {
 
 }
