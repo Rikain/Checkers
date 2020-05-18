@@ -9,8 +9,9 @@ protected:
     gameLogic *game;
 public:
     std::default_random_engine gen;
+    gameLogic* change_game_ptr(gameLogic* new_game);
     virtual gameLogic::Move return_a_move() = 0;
-    AI(gameLogic *game);
+    AI(gameLogic *game = nullptr);
     virtual ~AI();
 };
 

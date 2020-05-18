@@ -73,7 +73,7 @@ gameGraphicsScene::gameGraphicsScene(int AI_height, QObject *parent)
     highlight_squares();
     if(AI_height != 0){
         assert(AI_height < 11);
-        computer_player = new GTSAlgortihms(game,AI_height,false);
+        computer_player = new GTSAlgortihms(AI_height,false,game);
         std::uniform_int_distribution<> dist(0,1);
         human_player = dist(computer_player->gen);
         if(!human_player){

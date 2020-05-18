@@ -12,7 +12,7 @@ class GTSAlgortihms : public AI
     void reset();
     bool pruning = false;
 public:
-    GTSAlgortihms(gameLogic *game_in, int height_in, bool pruning);
+    GTSAlgortihms(int height_in, bool pruning_in, gameLogic *game_in = nullptr);
     gameLogic::Move return_a_move() override;
     void set_height(int h);
 };

@@ -49,7 +49,7 @@ public:
 private:
     int pieces_counter;
     int empty_moves = 0;
-    static constexpr int moves_before_draw = 5;
+    static constexpr int moves_before_draw = 48;
     GameState state = inProgress;
     bool white_player = true;
     bool free_array = false;

@@ -123,7 +123,7 @@ void GTSAlgortihms::reset()
 {
 }
 
-GTSAlgortihms::GTSAlgortihms(gameLogic *game_in, int height_in, bool pruning_in)
+GTSAlgortihms::GTSAlgortihms(int height_in, bool pruning_in, gameLogic *game_in)
     :AI(game_in),height(height_in),pruning(pruning_in)
 {
 }

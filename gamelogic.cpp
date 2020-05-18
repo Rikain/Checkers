@@ -44,7 +44,6 @@ gameLogic::gameLogic(QSquare **squares_ptr, size_t board_side_in)
 {
     squares = new Square*[board_side_in*board_side_in];
     free_array = true;
-    empty_moves = 0;
 
     for(size_t i = 0;i < board_side_in*board_side_in;++i){
         squares[i] = squares_ptr[i];
@@ -75,9 +74,67 @@ gameLogic::gameLogic(QSquare **squares_ptr, size_t board_side_in)
 gameLogic::gameLogic(size_t board_side_in)
 {
     assert(board_side == board_side_in);
-    squares = nullptr;
-    squares_size = board_side_in*board_side_in;
+    squares = new Square*[board_side_in*board_side_in];
+    free_array = true;
+    free_squares = true;
     bool black = false;
+
+    int rows = 3;
+    if(board_side == 8){
+        rows = 3;
+    }else if(board_side == 10){
+        rows = 4;
+    }
+
+    size_t i = 0;
+
+    size_t cap = board_side*rows;
+
+    for(;i < cap;++i){
+        if(black){
+            squares[i] = new Square((i%board_side),(i/board_side),Square::Black);
+            if(i%board_side != board_side-1){
+                black = false;
+            }
+        }else{
+            squares[i] = new Square((i%board_side),(i/board_side),Square::Empty);
+            if(i%board_side != board_side-1){
+                black = true;
+            }
+        }
+    }
+
+    cap += board_side*(board_side-2*rows);
+    for(;i < cap;++i){
+        if(black){
+            squares[i] = new Square((i%board_side),(i/board_side),Square::Empty);
+            if(i%board_side != board_side-1){
+                black = false;
+            }
+        }else{
+            squares[i] = new Square((i%board_side),(i/board_side),Square::Empty);
+            if(i%board_side != board_side-1){
+                black = true;
+            }
+        }
+    }
+    cap +=  board_side*rows;
+
+    for(;i < cap;++i){
+        if(black){
+            squares[i] = new Square((i%board_side),(i/board_side),Square::White);
+            if(i%board_side != board_side-1){
+                black = false;
+            }
+        }else{
+            squares[i] = new Square((i%board_side),(i/board_side),Square::Empty);
+            if(i%board_side != board_side-1){
+                black = true;
+            }
+        }
+    }
+
+    squares_size = board_side_in*board_side_in;
     size_t j = ((board_side_in-2)/2) * board_side_in;
     size_t j2 = squares_size - (((board_side_in-2)/2) * board_side_in);
     for(size_t i =0;i < squares_size ;++i){
