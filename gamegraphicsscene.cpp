@@ -73,7 +73,7 @@ gameGraphicsScene::gameGraphicsScene(int AI_height, QObject *parent)
     highlight_squares();
     if(AI_height != 0){
         assert(AI_height < 11);
-        computer_player = new GTSAlgortihms(AI_height,true,AI::PiecesOnly,game);
+        computer_player = new GTSAlgortihms(AI_height,true,AI::Mix,game);
         std::uniform_int_distribution<> dist(0,1);
         human_player = dist(computer_player->gen);
         if(!human_player){
@@ -164,7 +164,7 @@ void gameGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 void gameGraphicsScene::rollback_last_move()
 {
-    if(!played_moves.empty()){
+    if(!played_moves.empty() && !(played_moves.size() == 1 && !human_player)){
         clear_inputs();
         (*game).rollback_move(played_moves.top().first,played_moves.top().second);
         played_moves.pop();

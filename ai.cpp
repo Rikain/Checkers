@@ -111,21 +111,8 @@ int AI::state_evaluation_pieces_only(gameLogic* game)
         return value;
     }
     else{
-        int value = 0;
         std::array<std::vector<gameLogic::Coordinates>*,4> pieces = game->pieces();
-        for(auto piece : (*(pieces[0]))){
-            value += 1;
-        }
-        for(auto piece : (*(pieces[1]))){
-            value -= 1;
-        }
-        for(auto piece : (*(pieces[2]))){
-            value += 2;
-        }
-        for(auto piece : (*(pieces[3]))){
-            value -= 2;
-        }
-        return value;
+        return ((*(pieces)[0]).size() - (*(pieces)[1]).size() + 2*(*(pieces)[2]).size() - 2*(*(pieces)[3]).size());
     }
     return 0;
 }

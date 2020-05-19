@@ -14,10 +14,8 @@ bool gameLogic::switch_player()
 }
 
 gameLogic::gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_in , bool free_array_in,bool free_squares_in,int empty_moves_in)
-    :empty_moves(empty_moves_in),free_array(free_array_in),free_squares(free_squares_in),squares(squares_ptr)
+    :empty_moves(empty_moves_in),free_array(free_array_in),free_squares(free_squares_in),squares(squares_ptr),squares_size(array_size),board_side(board_side_in)
 {
-    assert(array_size == squares_size);
-    assert(board_side_in == board_side);
     assert(array_size == board_side_in*board_side_in);
     for(size_t i =0;i < array_size ;++i){
         switch (squares_ptr[i]->show_piece()) {
@@ -41,9 +39,11 @@ gameLogic::gameLogic(Square **squares_ptr, size_t array_size, size_t board_side_
 }
 
 gameLogic::gameLogic(QSquare **squares_ptr, size_t board_side_in)
+    :squares_size((board_side_in*board_side_in)),board_side(board_side_in)
 {
     squares = new Square*[board_side_in*board_side_in];
     free_array = true;
+
 
     for(size_t i = 0;i < board_side_in*board_side_in;++i){
         squares[i] = squares_ptr[i];
@@ -72,8 +72,8 @@ gameLogic::gameLogic(QSquare **squares_ptr, size_t board_side_in)
 }
 
 gameLogic::gameLogic(size_t board_side_in)
+    :squares_size((board_side_in*board_side_in)),board_side(board_side_in)
 {
-    assert(board_side == board_side_in);
     squares = new Square*[board_side_in*board_side_in];
     free_array = true;
     free_squares = true;

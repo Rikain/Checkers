@@ -25,7 +25,7 @@ void gameplayWindow::new_board()
 {
     delete_board();
 
-    scene = new gameGraphicsScene(6,this);
+    scene = new gameGraphicsScene(7,this);
 
     ui->graphicsView->setScene(scene);
 }
