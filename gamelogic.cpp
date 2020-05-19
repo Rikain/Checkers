@@ -196,7 +196,7 @@ void gameLogic::update_moves()
         moves_of_a_piece(p,longest_move,moves,taken,false);
     }
 
-    if(longest_move == 0){
+    if(longest_move < 2){
         if(white_player){
             state = blackWon;
         }else{
