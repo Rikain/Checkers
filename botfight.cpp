@@ -63,7 +63,7 @@ botFight::~botFight()
     }
 }
 
-std::tuple<int, int, int> botFight::make_them_fight(int times, bool ai1_is_white,bool measure_time, unsigned long long* &over_all_time_ai1,unsigned long long*& over_all_time_ai2,int*& moves_ai1, int* &moves_ai2)
+std::tuple<int, int, int> botFight::make_them_fight(int times, bool ai1_is_white,bool measure_time, unsigned long long* over_all_time_ai1,unsigned long long* over_all_time_ai2,int* moves_ai1, int* moves_ai2)
 {
     int wins = 0;
     int loses = 0;
