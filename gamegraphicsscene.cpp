@@ -21,7 +21,12 @@ gameGraphicsScene::gameGraphicsScene(int AI_height, QObject *parent)
 
     for(;i < cap;++i){
         if(black){
-            squares[i] = new QSquare((i%board_side),(i/board_side),Square::Black,Qt::black);
+            if(i == cap-2){
+                squares[i] = new QSquare((i%board_side),(i/board_side),Square::BlackKing,Qt::black);
+            }else{
+                squares[i] = new QSquare((i%board_side),(i/board_side),Square::Black,Qt::black);
+            }
+
             this->addItem(squares[i]);
             if(i%board_side != board_side-1){
                 black = false;
